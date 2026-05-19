@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>언제 시간 괜찮으세요?</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { min-height: 100vh; background: linear-gradient(180deg,#1a1333,#0f1020); display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; font-family: -apple-system, 'Noto Sans KR', sans-serif; }
+.card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 2.5rem; padding: 1.75rem; max-width: 420px; width: 100%; }
+.badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,182,193,0.15); border: 1px solid rgba(255,182,193,0.25); border-radius: 999px; padding: 6px 14px; font-size: 13px; color: #ffb6c1; margin-bottom: 1.25rem; }
+.avatar-box { width: 88px; height: 88px; background: #221b44; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+.alabel { font-size: 10px; color: #ffb6c1; margin-bottom: 2px; }
+h1 { font-size: 1.5rem; font-weight: 800; color: #fff; text-align: center; margin-bottom: 1.25rem; }
+.inner { background: #120f24; border: 1px solid rgba(255,255,255,0.08); border-radius: 1.5rem; padding: 1.25rem; }
+.sec-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #94a3b8; margin-bottom: 0.75rem; }
+.name-input { width: 100%; height: 40px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: #fff; font-size: 14px; font-weight: 600; padding: 0 14px; margin-bottom: 14px; outline: none; }
+.name-input::placeholder { color: #6b7280; }
+.name-input:focus { border-color: rgba(255,182,193,0.45); }
+.slot-list { max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+.slot-list::-webkit-scrollbar { width: 4px; }
+.slot-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+.slot-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; padding: 1rem; }
+.slot-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.slot-day { font-size: 12px; color: #94a3b8; }
+.slot-date { font-size: 15px; font-weight: 700; color: #fff; }
+.slot-times { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.time-btn { background: rgba(255,255,255,0.05); border: none; border-radius: 10px; color: #cbd5e1; font-size: 13px; font-weight: 700; padding: 10px 4px; cursor: pointer; transition: all 0.15s; width: 100%; }
+.time-btn:hover { background: rgba(255,255,255,0.12); }
+.time-btn.active { background: #ffb6c1; color: #24184b; transform: scale(1.04); }
+.selected-box { margin-top: 1rem; background: rgba(255,182,193,0.1); border: 1px solid rgba(255,182,193,0.25); border-radius: 1rem; padding: 14px; }
+.sel-label { font-size: 11px; color: #ffb6c1; margin-bottom: 4px; text-align: center; }
+.sel-time { font-size: 1.15rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 12px; min-height: 1.6rem; }
+.link-row { display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 12px; }
+.link-text { flex: 1; font-size: 11px; color: #94a3b8; word-break: break-all; line-height: 1.5; }
+.copy-btn { flex-shrink: 0; height: 34px; padding: 0 14px; background: #ffb6c1; color: #24184b; border: none; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; transition: background 0.15s; }
+.copy-btn:hover { background: #ffc8d4; }
+.hint { font-size: 11px; color: #6b7280; text-align: center; margin-top: 8px; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #24184b; border: 1px solid rgba(255,182,193,0.4); color: #ffb6c1; font-size: 13px; font-weight: 700; padding: 10px 20px; border-radius: 999px; opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap; z-index: 999; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div style="text-align:center; margin-bottom:1rem;">
+    <div class="badge">💗 정우님 일정 선택</div>
+    <div class="avatar-box">
+      <div class="alabel">PIXEL MOOD</div>
+      <div style="font-size:2rem">🧸</div>
+    </div>
+    <h1>언제 시간 괜찮으세요?</h1>
+  </div>
+
+  <div class="inner">
+    <div class="sec-label">👤 보내는 사람 이름</div>
+    <input class="name-input" id="senderName" placeholder="예: 난희" maxlength="10" oninput="updateLink()">
+
+    <div class="sec-label">📅 가능한 시간 선택</div>
+    <div class="slot-list" id="slotList"></div>
+
+    <div class="selected-box">
+      <div class="sel-label">선택한 시간</div>
+      <div class="sel-time" id="selDisplay">시간을 선택해 주세요</div>
+      <div class="link-row">
+        <div class="link-text" id="linkText">시간 선택 후 공유 링크가 여기 표시됩니다</div>
+        <button class="copy-btn" id="copyBtn" onclick="copyLink()">복사</button>
+      </div>
+      <div class="hint">복사 후 카카오톡 · 문자에 붙여넣기 하세요</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const slots = [
+  {day:"화",date:"05.20",times:["11:00","14:00","18:00"]},
+  {day:"수",date:"05.21",times:["10:30","13:30","17:00"]},
+  {day:"목",date:"05.22",times:["09:30","15:00","19:00"]},
+  {day:"금",date:"05.23",times:["11:30","16:00","20:00"]},
+  {day:"토",date:"05.24",times:["13:00","15:30","18:30"]},
+  {day:"일",date:"05.25",times:["12:00","14:30","17:30"]},
+  {day:"월",date:"05.26",times:["10:00","13:00","16:30"]},
+  {day:"화",date:"05.27",times:["11:00","15:00","19:00"]},
+  {day:"수",date:"05.28",times:["09:00","14:00","18:00"]},
+  {day:"목",date:"05.29",times:["10:30","16:00","20:00"]},
+  {day:"금",date:"05.30",times:["11:30","15:30","19:30"]},
+  {day:"토",date:"05.31",times:["12:30","17:00","20:30"]},
+];
+const emojis = ["🎮","🎸","🎯","🎲","🎨","🧩","🎪","🎭","🎬","🎤","🎵","🎺"];
+let sel = {day:"",date:"",time:""};
+
+function render() {
+  document.getElementById("slotList").innerHTML = slots.map((s,i) => `
+    <div class="slot-card">
+      <div class="slot-head">
+        <div><div class="slot-day">${s.day}요일</div><div class="slot-date">${s.date}</div></div>
+        <div style="font-size:1.3rem">${emojis[i]}</div>
+      </div>
+      <div class="slot-times">
+        ${s.times.map(t => `<button class="time-btn ${sel.date===s.date&&sel.time===t?'active':''}" onclick="pick('${s.day}','${s.date}','${t}')">${t}</button>`).join("")}
+      </div>
+    </div>
+  `).join("");
+}
+
+function pick(day, date, time) {
+  sel = {day, date, time};
+  document.getElementById("selDisplay").textContent = `${date} (${day}) ${time}`;
+  updateLink();
+  render();
+}
+
+function updateLink() {
+  if (!sel.time) return;
+  const name = document.getElementById("senderName").value.trim();
+  const base = location.origin + location.pathname;
+  let url = `${base}?date=${encodeURIComponent(sel.date)}&day=${encodeURIComponent(sel.day)}&time=${encodeURIComponent(sel.time)}`;
+  if (name) url += `&from=${encodeURIComponent(name)}`;
+  document.getElementById("linkText").textContent = url;
+}
+
+function copyLink() {
+  const txt = document.getElementById("linkText").textContent;
+  if (!sel.time) { showToast("먼저 시간을 선택해 주세요"); return; }
+  navigator.clipboard.writeText(txt).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+  });
+  document.getElementById("copyBtn").textContent = "✓ 완료";
+  showToast("링크가 복사되었어요!");
+  setTimeout(() => document.getElementById("copyBtn").textContent = "복사", 2000);
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+// URL 파라미터로 받은 경우 표시
+const p = new URLSearchParams(location.search);
+if (p.get("date") && p.get("time")) {
+  const from = p.get("from") ? `${p.get("from")}님이 선택한 시간` : "선택된 시간";
+  document.querySelector(".badge").textContent = `💗 ${from}`;
+  pick(p.get("day")||"", p.get("date"), p.get("time"));
+}
+
+render();
+</script>
+</body>
+</html>
